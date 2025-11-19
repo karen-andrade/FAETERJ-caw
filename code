@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards Científicos - Combata a Pseudociência</title>
+    <meta name="description" content="Aprenda a distinguir fato de mito com flashcards educativos sobre pensamento científico">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="container">
+        <!-- Cabeçalho -->
+        <header class="header">
+            <h1 class="title">🔬 Flashcards Científicos</h1>
+            <p class="subtitle">Aprenda a distinguir Ciência de Pseudociência</p>
+        </header>
+
+        <!-- Card Principal -->
+        <section class="card-container">
+            <div class="card" id="flashcard">
+                <!-- Frente do Card -->
+                <div class="card-face card-front">
+                    <div class="card-content">
+                        <span class="card-label">Afirmação</span>
+                        <p class="card-statement" id="statement">Carregando...</p>
+                        <p class="card-hint">💡 Clique no card para revelar</p>
+                    </div>
+                </div>
+
+                <!-- Verso do Card -->
+                <div class="card-face card-back">
+                    <div class="card-content">
+                        <span class="card-label" id="verdict-label">Resposta</span>
+                        <div class="verdict-badge" id="verdict-badge">FATO</div>
+                        <p class="card-explanation" id="explanation">Explicação aqui...</p>
+                        <button class="btn-flip" onclick="flipCard()">← Voltar</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Botões de Decisão -->
+        <section class="decision-buttons" id="decision-buttons">
+            <button class="btn btn-myth" onclick="checkAnswer('mito')">
+                <span class="btn-icon">❌</span>
+                <span>Mito</span>
+            </button>
+            <button class="btn btn-fact" onclick="checkAnswer('fato')">
+                <span class="btn-icon">✅</span>
+                <span>Fato</span>
+            </button>
+        </section>
+
+        <!-- Controles de Navegação -->
+        <section class="controls">
+            <button class="nav-btn" id="prev-btn" onclick="previousCard()">
+                <span>← Anterior</span>
+            </button>
+            
+            <div class="progress">
+                <span class="progress-text" id="progress-text">1 / 6</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+            
+            <button class="nav-btn" id="next-btn" onclick="nextCard()">
+                <span>Próximo →</span>
+            </button>
+        </section>
+
+        <!-- Estatísticas -->
+        <section class="stats">
+            <div class="stat-item">
+                <span class="stat-value" id="correct-count">0</span>
+                <span class="stat-label">Acertos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="total-count">0</span>
+                <span class="stat-label">Tentativas</span>
+            </div>
+        </section>
+
+        <!-- Rodapé -->
+        <footer class="footer">
+            <p>Desenvolvido por <strong id="student-name">Karen Andrade</strong></p>
+            <p class="footer-note">Projeto Educativo - HTML5, CSS3 e JavaScript Puro</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+/* ========================================
+   DADOS DOS FLASHCARDS
+   ======================================== */
+
+// Array com todas as afirmações científicas e suas respostas
+const flashcardsData = [
+    {
+        afirmacao: "Vacinas causam autismo em crianças",
+        resposta: "mito",
+        explicacao: "Não há qualquer evidência científica que relacione vacinas ao autismo. O estudo fraudulento de 1998 que sugeriu essa conexão foi desmentido e seu autor teve a licença médica cassada. Múltiplos estudos com milhões de crianças não encontraram relação alguma."
+    },
+    {
+        afirmacao: "A Terra tem aproximadamente 4,5 bilhões de anos",
+        resposta: "fato",
+        explicacao: "Através de datação radiométrica de rochas e meteoritos, cientistas determinaram com precisão que a Terra se formou há cerca de 4,54 bilhões de anos. Essa idade é confirmada por múltiplos métodos independentes de datação."
+    },
+    {
+        afirmacao: "Usamos apenas 10% da capacidade do nosso cérebro",
+        resposta: "mito",
+        explicacao: "Neuroimagem moderna mostra que usamos praticamente todas as partes do cérebro, e que a maioria das áreas está ativa mesmo durante o sono. Não há região 'dormente' esperando ser desbloqueada. Diferentes tarefas ativam diferentes regiões."
+    },
+    {
+        afirmacao: "Antibióticos são eficazes contra vírus como gripe",
+        resposta: "mito",
+        explicacao: "Antibióticos funcionam apenas contra bactérias. Vírus têm estrutura e mecanismos completamente diferentes. Usar antibióticos contra viroses não só é inútil como contribui para a resistência bacteriana, um grave problema de saúde pública."
+    },
+    {
+        afirmacao: "A mudança climática atual é causada principalmente por atividades humanas",
+        resposta: "fato",
+        explicacao: "97% dos cientistas climáticos concordam: o aquecimento global atual é causado por emissões humanas de gases de efeito estufa. Evidências incluem aumento de CO2 atmosférico, aquecimento acelerado desde a Revolução Industrial e modelos climáticos precisos."
+    },
+    {
+        afirmacao: "DNA é a única molécula responsável pela hereditariedade",
+        resposta: "mito",
+        explicacao: "Embora o DNA seja o principal, a epigenética mostra que modificações químicas no DNA e nas histonas também são herdadas. Além disso, alguns vírus usam RNA. A hereditariedade é mais complexa do que apenas sequência de DNA."
+    }
+];
+
+/* ========================================
+   VARIÁVEIS GLOBAIS
+   ======================================== */
+
+let currentIndex = 0;
+let correctAnswers = 0;
+let totalAttempts = 0;
+let isFlipped = false;
+let hasAnswered = false;
+
+/* ========================================
+   ELEMENTOS DO DOM
+   ======================================== */
+
+const flashcard = document.getElementById('flashcard');
+const statementEl = document.getElementById('statement');
+const verdictLabelEl = document.getElementById('verdict-label');
+const verdictBadgeEl = document.getElementById('verdict-badge');
+const explanationEl = document.getElementById('explanation');
+const progressTextEl = document.getElementById('progress-text');
+const progressFillEl = document.getElementById('progress-fill');
+const correctCountEl = document.getElementById('correct-count');
+const totalCountEl = document.getElementById('total-count');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const decisionButtons = document.getElementById('decision-buttons');
+
+/* ========================================
+   FUNÇÕES PRINCIPAIS
+   ======================================== */
+
+/**
+ * Inicializa a aplicação ao carregar a página
+ */
+function init() {
+    loadCard();
+    updateProgress();
+    updateStats();
+    updateNavigationButtons();
+    
+    // Permite clicar no card para virar (apenas se ainda não respondeu)
+    flashcard.addEventListener('click', function(e) {
+        // Não vira se clicar no botão de voltar
+        if (e.target.classList.contains('btn-flip')) {
+            return;
+        }
+        // Só vira se já tiver respondido
+        if (hasAnswered && !isFlipped) {
+            flipCard();
+        }
+    });
+}
+
+/**
+ * Carrega o card atual com os dados do array
+ */
+function loadCard() {
+    const currentCard = flashcardsData[currentIndex];
+    
+    // Atualiza o texto da afirmação
+    statementEl.textContent = currentCard.afirmacao;
+    
+    // Atualiza o verso com a resposta e explicação
+    verdictBadgeEl.textContent = currentCard.resposta.toUpperCase();
+    verdictBadgeEl.className = `verdict-badge ${currentCard.resposta}`;
+    explanationEl.textContent = currentCard.explicacao;
+    
+    // Reset do estado do card
+    flashcard.classList.remove('flipped');
+    isFlipped = false;
+    hasAnswered = false;
+    
+    // Mostra os botões de decisão novamente
+    decisionButtons.classList.remove('hidden');
+}
+
+/**
+ * Vira o card para mostrar a resposta
+ */
+function flipCard() {
+    flashcard.classList.toggle('flipped');
+    isFlipped = !isFlipped;
+}
+
+/**
+ * Verifica se a resposta do usuário está correta
+ * @param {string} userAnswer - 'fato' ou 'mito'
+ */
+function checkAnswer(userAnswer) {
+    // Previne múltiplas respostas
+    if (hasAnswered) return;
+    
+    const currentCard = flashcardsData[currentIndex];
+    const isCorrect = userAnswer === currentCard.resposta;
+    
+    // Atualiza estatísticas
+    totalAttempts++;
+    if (isCorrect) {
+        correctAnswers++;
+    }
+    
+    // Marca como respondido
+    hasAnswered = true;
+    
+    // Vira o card automaticamente para mostrar a explicação
+    setTimeout(() => {
+        flipCard();
+        decisionButtons.classList.add('hidden');
+    }, 300);
+    
+    // Atualiza display de estatísticas
+    updateStats();
+    
+    // Feedback visual (opcional - pode adicionar animação ou som)
+    if (isCorrect) {
+        flashcard.style.animation = 'none';
+        setTimeout(() => {
+            flashcard.style.animation = '';
+        }, 10);
+    }
+}
+
+/**
+ * Vai para o card anterior
+ */
+function previousCard() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadCard();
+        updateProgress();
+        updateNavigationButtons();
+    }
+}
+
+/**
+ * Vai para o próximo card
+ */
+function nextCard() {
+    if (currentIndex < flashcardsData.length - 1) {
+        currentIndex++;
+        loadCard();
+        updateProgress();
+        updateNavigationButtons();
+    }
+}
+
+/**
+ * Atualiza a barra e texto de progresso
+ */
+function updateProgress() {
+    const current = currentIndex + 1;
+    const total = flashcardsData.length;
+    const percentage = (current / total) * 100;
+    
+    progressTextEl.textContent = `${current} / ${total}`;
+    progressFillEl.style.width = `${percentage}%`;
+}
+
+/**
+ * Atualiza o display de estatísticas
+ */
+function updateStats() {
+    correctCountEl.textContent = correctAnswers;
+    totalCountEl.textContent = totalAttempts;
+}
+
+/**
+ * Atualiza o estado dos botões de navegação
+ */
+function updateNavigationButtons() {
+    // Desabilita o botão anterior se estiver no primeiro card
+    prevBtn.disabled = currentIndex === 0;
+    
+    // Desabilita o botão próximo se estiver no último card
+    nextBtn.disabled = currentIndex === flashcardsData.length - 1;
+}
+
+/* ========================================
+   INICIALIZAÇÃO
+   ======================================== */
+
+// Aguarda o DOM estar completamente carregado
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+/* ========================================
+   FUNÇÕES AUXILIARES PARA EXTENSÃO
+   ======================================== */
+
+/**
+ * Embaralha os cards (opcional - pode ser usado para modo aleatório)
+ */
+function shuffleCards() {
+    for (let i = flashcardsData.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [flashcardsData[i], flashcardsData[j]] = [flashcardsData[j], flashcardsData[i]];
+    }
+}
+
+/**
+ * Reseta o progresso do usuário
+ */
+function resetProgress() {
+    currentIndex = 0;
+    correctAnswers = 0;
+    totalAttempts = 0;
+    loadCard();
+    updateProgress();
+    updateStats();
+    updateNavigationButtons();
+}
+
+// Expõe funções globalmente para uso nos botões HTML
+window.flipCard = flipCard;
+window.checkAnswer = checkAnswer;
+window.previousCard = previousCard;
+window.nextCard = nextCard;
+
+
+367368369370371372373374375376377378379380381382383384385386387388389390391392393394395396397398399400401402403404405406407408409410411412413414415416417418419420421422423424425426427428429430431432433434
+
+    margin: 0;
+
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* ========================================
+   RODAPÉ
+   ======================================== */
+
+.footer {
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+}
+
+.footer p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 4px;
+}
+
+.footer strong {
+    color: var(--primary);
+}
+
+.footer-note {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+/* ========================================
+   RESPONSIVIDADE
+   ======================================== */
+
+@media (max-width: 640px) {
+    .container {
+        padding: 24px;
+    }
+    
+    .title {
+        font-size: 1.5rem;
+    }
+    
+    .card {
+        height: 350px;
+    }
+    
+    .card-face {
+        padding: 24px;
+    }
+    
+    .card-statement {
+        font-size: 1.25rem;
+    }
+    
+    .controls {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .nav-btn {
+        width: 100%;
+    }
+}
