@@ -116,17 +116,6 @@ O projeto visa:
 - Combater desinformação
 - Promover literacia científica
 
-## Personalização
-
-Para adicionar novos flashcards, edite o array `flashcardsData` no arquivo `script.js`:
-
-```javascript
-{
-    afirmacao: "Sua afirmação aqui",
-    resposta: "fato",  // ou "mito"
-    explicacao: "Explicação científica detalhada aqui..."
-}
-```
 
 ## 📝 Notas de Desenvolvimento
 
